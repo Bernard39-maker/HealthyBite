@@ -2,11 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ChakraProvider } from '@chakra-ui/react'
 import { BrowserRouter } from 'react-router-dom'
-import { extendTheme } from '@chakra-ui/react'  // if you want custom theme
+import { extendTheme } from '@chakra-ui/react'
+import { CartProvider } from './Components/CartContext'
 import './index.css'
 import App from './App.tsx'
 
-// Optional: your custom theme (uncomment/move your extendTheme here if needed)
 const theme = extendTheme({
   colors: {
     brand: {
@@ -20,7 +20,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ChakraProvider theme={theme}>
       <BrowserRouter>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </BrowserRouter>
     </ChakraProvider>
   </StrictMode>
