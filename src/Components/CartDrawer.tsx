@@ -36,7 +36,7 @@ import { FaMinus, FaPlus, FaShoppingCart, FaTrash } from "react-icons/fa";
 import { useCart } from "./CartContext";
 import { useNavigate } from "react-router-dom";
 
-// ─── Checkout Modal ───────────────────────────────────────────────────────────
+// ─── Checkout Modal ─────────
 function CheckoutModal({
   isOpen,
   onClose,
@@ -47,12 +47,26 @@ function CheckoutModal({
   onSuccess: () => void;
 }) {
   const { items, total, clearCart } = useCart();
-  const [form, setForm] = useState({ name: "", phone: "", address: "", note: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", note: "" });
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
+  // Dynamically load Paystack script if not present
+  const loadPaystack = () =>
+    new Promise<void>((resolve, reject) => {
+      if ((window as any).PaystackPop) return resolve();
+      const script = document.createElement("script");
+      script.src = "https://js.paystack.co/v1/inline.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load Paystack script"));
+      document.body.appendChild(script);
+    });
+
+  // Add api base url from env
+  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
   const handleOrder = async () => {
-    if (!form.name || !form.phone || !form.address) {
+    if (!form.name || !form.email || !form.phone || !form.address) {
       toast({ title: "Please fill in all required fields.", status: "warning", duration: 3000, isClosable: true });
       return;
     }
@@ -62,38 +76,143 @@ function CheckoutModal({
       return;
     }
 
+    // Try to extract email from JWT payload; fallback to empty string
+    let tokenEmail = "";
+    try {
+      const payload = token.split(".")[1];
+      tokenEmail = JSON.parse(atob(payload)).email || "";
+    } catch {
+      tokenEmail = "";
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            mealId: i._id,
-            name: i.title,
-            price: i.price,
-            quantity: i.quantity,
-          })),
-          totalAmount: total,
-          address: form.address,
-          phone: form.phone,
-          customerName: form.name,
-          note: form.note,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      await loadPaystack();
+      const reference = `ref_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "";
+      if (!paystackKey) {
+        throw new Error("Missing Paystack public key. Set VITE_PAYSTACK_PUBLIC_KEY in your frontend env.");
+      }
 
-      clearCart();
-      onClose();
-      onSuccess();
+      // choose email in this order: explicit form entry -> token email -> safe fallback
+      const customerEmail = (form.email || tokenEmail || "no-reply@example.com").trim();
+
+      // simple email validator
+      const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+      // debug log (open browser console to inspect)
+      console.debug("Paystack customerEmail:", customerEmail, "type:", typeof customerEmail);
+
+      if (!isValidEmail(customerEmail)) {
+        setLoading(false);
+        toast({ title: "Please enter a valid email address.", status: "warning", duration: 3500, isClosable: true });
+        console.warn("Blocked Paystack call: invalid email ->", JSON.stringify(customerEmail));
+        return;
+      }
+
+      // async worker moved out of the callback wrapper
+      const verifyAndCreateOrder = async (referenceFromPaystack: string) => {
+        // helper to safely parse JSON and surface useful errors if HTML/other is returned
+        const parseJsonSafe = async (res: Response) => {
+          const text = await res.text();
+          const contentType = res.headers.get("content-type") || "";
+          const looksLikeJson = contentType.includes("application/json") || /^\s*[\[{]/.test(text);
+          if (!looksLikeJson) {
+            throw new Error(`Unexpected non-JSON response from ${res.url} (status ${res.status}): ${text.slice(0, 300)}`);
+          }
+          try {
+            return JSON.parse(text);
+          } catch (err) {
+            throw new Error(`Invalid JSON from ${res.url} (status ${res.status}): ${text.slice(0, 300)}`);
+          }
+        };
+
+        try {
+          // verify with backend
+          const verifyUrl = `${apiBase}/api/payments/verify`;
+          console.debug("Verifying payment at:", verifyUrl);
+          const verifyRes = await fetch(verifyUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ reference: referenceFromPaystack }),
+          });
+
+          const verifyData = await parseJsonSafe(verifyRes);
+          if (!verifyRes.ok || !verifyData.verified) {
+            throw new Error(verifyData.message || `Payment verification failed (status ${verifyRes.status}).`);
+          }
+
+          // create order on backend now that payment is verified
+          const orderRes = await fetch(`${apiBase}/api/orders`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              items: items.map((i) => ({
+                mealId: i._id,
+                name: i.title,
+                price: i.price,
+                quantity: i.quantity,
+              })),
+              totalAmount: total,
+              address: form.address,
+              phone: form.phone,
+              customerName: form.name,
+              note: form.note,
+              paymentReference: referenceFromPaystack,
+              paymentVerified: true,
+            }),
+          });
+
+          const orderData = await parseJsonSafe(orderRes);
+          if (!orderRes.ok) throw new Error(orderData.message || `Failed to create order (status ${orderRes.status}).`);
+
+          clearCart();
+          onClose();
+          onSuccess();
+        } catch (err: any) {
+          // surface helpful error to user and console
+          console.error("verifyAndCreateOrder error:", err);
+          toast({ title: err.message || "Payment/Order error.", status: "error", duration: 4000, isClosable: true });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Pass a plain function as Paystack callback (Paystack may validate callback type)
+      const handler = (window as any).PaystackPop.setup({
+        key: paystackKey,
+        email: customerEmail,
+        amount: Math.round(total * 100), // paystack expects amount in kobo
+        currency: "NGN",
+        ref: reference,
+        metadata: {
+          custom_fields: [
+            { display_name: "Customer name", variable_name: "customer_name", value: form.name },
+            { display_name: "Phone", variable_name: "phone", value: form.phone },
+          ],
+        },
+        onClose: () => {
+          setLoading(false);
+          toast({ title: "Payment cancelled.", status: "info", duration: 2500, isClosable: true });
+        },
+        callback: function (response: { reference: string }) {
+          setLoading(true);
+          (async () => {
+            await verifyAndCreateOrder(response.reference);
+          })();
+        },
+      });
+
+      handler.openIframe();
     } catch (err: any) {
-      toast({ title: err.message, status: "error", duration: 3000, isClosable: true });
-    } finally {
       setLoading(false);
+      toast({ title: err.message || "Unexpected error.", status: "error", duration: 3000, isClosable: true });
     }
   };
 
@@ -121,6 +240,20 @@ function CheckoutModal({
                   placeholder="Jane Doe"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  bg="gray.50" border="1px solid" borderColor="gray.200"
+                  _hover={{ borderColor: "#6b8f3f" }}
+                  _focus={{ borderColor: "#6b8f3f", boxShadow: "0 0 0 1px #6b8f3f", bg: "white" }}
+                  rounded="md"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="xs" fontWeight="semibold" color="gray.500" mb={1}>Email address</FormLabel>
+                <Input
+                  size="sm"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   bg="gray.50" border="1px solid" borderColor="gray.200"
                   _hover={{ borderColor: "#6b8f3f" }}
                   _focus={{ borderColor: "#6b8f3f", boxShadow: "0 0 0 1px #6b8f3f", bg: "white" }}
