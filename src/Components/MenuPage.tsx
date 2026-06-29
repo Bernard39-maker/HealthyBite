@@ -49,6 +49,11 @@ type Meal = {
 
 type Category = { strCategory: string };
 type Area = { strArea: string };
+type MealSummary = { idMeal: string; strMeal: string; strMealThumb: string };
+type ApiResponse<T> = { meals: T[] | null };
+
+const filterPresent = <T,>(items: (T | null | undefined)[]): T[] =>
+  items.filter((item): item is T => Boolean(item));
 
 // ─── Price by category ───
 const PRICE_MAP: Record<string, number> = {
@@ -64,7 +69,7 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
-// ─── Meal detail modal ────────────────────────────────────────────────────────
+// ─── Meal detail modal ───
 function MealDetailModal({
   meal, isOpen, onClose, onAddToCart,
 }: {
@@ -230,8 +235,8 @@ export default function MenuPage() {
     try {
       if (search.trim()) {
         const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(search)}`);
-        const data = await res.json();
-        const raw = (data.meals || []).map((m: any) => ({ ...m, price: getPrice(m.strCategory) }));
+        const data = (await res.json()) as ApiResponse<Meal>;
+        const raw = (data.meals ?? []).map((m) => ({ ...m, price: getPrice(m.strCategory) }));
         setMeals(raw);
         setLoading(false);
         return;
@@ -239,30 +244,32 @@ export default function MenuPage() {
 
       if (selectedCategory) {
         const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(selectedCategory)}`);
-        const data = await res.json();
-        const raw = (data.meals || []).slice(0, 20);
+        const data = (await res.json()) as ApiResponse<MealSummary>;
+        const raw = (data.meals ?? []).slice(0, 20);
         const details = await Promise.all(
-          raw.map((m: any) =>
+          raw.map((m) =>
             fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${m.idMeal}`)
-              .then((r) => r.json()).then((d) => d.meals?.[0])
+              .then((r) => r.json() as Promise<ApiResponse<Meal>>)
+              .then((d) => d.meals?.[0])
           )
         );
-        setMeals(details.filter(Boolean).map((m: any) => ({ ...m, price: getPrice(m.strCategory) })));
+        setMeals(filterPresent(details).map((m) => ({ ...m, price: getPrice(m.strCategory) })));
         setLoading(false);
         return;
       }
 
       if (selectedArea) {
         const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(selectedArea)}`);
-        const data = await res.json();
-        const raw = (data.meals || []).slice(0, 20);
+        const data = (await res.json()) as ApiResponse<MealSummary>;
+        const raw = (data.meals ?? []).slice(0, 20);
         const details = await Promise.all(
-          raw.map((m: any) =>
+          raw.map((m) =>
             fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${m.idMeal}`)
-              .then((r) => r.json()).then((d) => d.meals?.[0])
+              .then((r) => r.json() as Promise<ApiResponse<Meal>>)
+              .then((d) => d.meals?.[0])
           )
         );
-        setMeals(details.filter(Boolean).map((m: any) => ({ ...m, price: getPrice(m.strCategory) })));
+        setMeals(filterPresent(details).map((m) => ({ ...m, price: getPrice(m.strCategory) })));
         setLoading(false);
         return;
       }
@@ -277,14 +284,14 @@ export default function MenuPage() {
 
       const catPromises = pickedCats.map((c) =>
         fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${c}`)
-          .then((r) => r.json())
-          .then((d) => shuffle(d.meals || []).slice(0, 4).map((m: any) => ({ ...m, strCategory: c, strArea: "", strInstructions: "Click to view details.", strTags: "", price: getPrice(c) })))
+          .then((r) => r.json() as Promise<ApiResponse<MealSummary>>)
+          .then((d) => shuffle(d.meals ?? []).slice(0, 4).map((m) => ({ ...m, strCategory: c, strArea: "", strInstructions: "Click to view details.", strTags: "", price: getPrice(c) })))
       );
 
       const areaPromises = pickedAreas.map((a) =>
         fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${a}`)
-          .then((r) => r.json())
-          .then((d) => shuffle(d.meals || []).slice(0, 3).map((m: any) => ({ ...m, strCategory: "", strArea: a, strInstructions: "Click to view details.", strTags: "", price: getPrice("Miscellaneous") })))
+          .then((r) => r.json() as Promise<ApiResponse<MealSummary>>)
+          .then((d) => shuffle(d.meals ?? []).slice(0, 3).map((m) => ({ ...m, strCategory: "", strArea: a, strInstructions: "Click to view details.", strTags: "", price: getPrice("Miscellaneous") })))
       );
 
       const [catResults, areaResults] = await Promise.all([Promise.all(catPromises), Promise.all(areaPromises)]);

@@ -125,7 +125,6 @@ function FeatureRow({
       templateColumns={{ base: "1fr", md: "1fr 1fr" }}
       gap={{ base: 8, md: 16 }}
       alignItems="center"
-      direction={reverse ? "rtl" : "ltr"}
     >
       <Box order={{ base: 1, md: reverse ? 2 : 1 }}>
         <Image
