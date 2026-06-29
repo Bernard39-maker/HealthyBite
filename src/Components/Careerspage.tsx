@@ -7,11 +7,9 @@ import {
   HStack,
   Icon,
   SimpleGrid,
-  Tag,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
 import Header from "./shared/header";
 import Footer from "./shared/footer";
 import {
@@ -24,7 +22,7 @@ import {
   FaBriefcase,
 } from "react-icons/fa";
 
-// ─── Wave ─────────────────────────────────────────────────────────────────────
+// ─── Wave ───────────
 type WaveProps = { d: string; fill: string; position?: "bottom" | "top"; height?: string | number };
 function Wave({ d, fill, position = "bottom", height = "120px" }: WaveProps) {
   const isBottom = position === "bottom";
@@ -39,7 +37,7 @@ function Wave({ d, fill, position = "bottom", height = "120px" }: WaveProps) {
   );
 }
 
-// ─── Perk Card ────────────────────────────────────────────────────────────────
+// ─── Perk Card ─────────
 function PerkCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <VStack
@@ -63,7 +61,7 @@ function PerkCard({ icon, title, text }: { icon: React.ReactNode; title: string;
   );
 }
 
-// ─── Job Card ─────────────────────────────────────────────────────────────────
+// ─── Job Card ─────
 function JobCard({
   title,
   department,
@@ -127,10 +125,8 @@ function JobCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ────
 export default function CareersPage() {
-  const navigate = useNavigate();
-
   const jobs = [
     {
       title: "Delivery Operations Coordinator",

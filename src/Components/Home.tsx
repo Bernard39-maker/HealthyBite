@@ -24,7 +24,7 @@ import Footer from "./shared/footer";
 import { FaLeaf, FaRegCalendar, FaTruck, FaShoppingCart } from "react-icons/fa";
 import { useCart } from "./CartContext";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────
 type Meal = {
   _id: string;
   title: string;
@@ -34,8 +34,8 @@ type Meal = {
   category: string;
 };
 
-// ─── Meal Card ────────────────────────────────────────────────────────────────
-function MealCard({ _id, title, content, price, img, onAdd }: { _id: string; title: string; content: string; price: number; img: string; onAdd: () => void }) {
+// ─── Meal Card ──────
+function MealCard({title, content, price, img, onAdd }: { _id: string; title: string; content: string; price: number; img: string; onAdd: () => void }) {
   return (
     <Box
       bg="white"
@@ -73,7 +73,7 @@ function Wave({ d, fill, position = "bottom", height = "120px" }: WaveProps) {
   );
 }
 
-// ─── Feature Card ─────────────────────────────────────────────────────────────
+// ─── Feature Card ───────
 function FeatureCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <VStack

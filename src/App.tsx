@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Home from "./Components/Home";
 import AuthPage from "./Components/Auth";
-import ResetPassword from "./Components/Resetpassword";
+import ResetPassword from "./Components/ResetPassword";
 import AdminDashboard from "./Components/AdminDashboard";
 import UserProfile from "./Components/UserProfile";
 import ProtectedRoute from "./Components/ProtectedRoute";
@@ -12,7 +12,7 @@ import AboutPage from "./Components/AboutPage";
 import ContactPage from "./Components/ContactPage";
 import HowItWorksPage from "./Components/Howitworkspage";
 import CareersPage from "./Components/Careerspage";
-import BlogPage from "./Components/BlogPage";
+import BlogPage from "./Components/Blogpage";
 import VerifyEmail from "./Components/VerifyEmail";
 import AuthSuccess from "./Components/AuthSucess";
 

@@ -16,7 +16,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
-import {  FaUser, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
+import {  FaUser, FaSignOutAlt } from "react-icons/fa";
 
 const Links = [
   { name: "Home",    href: "/"       },

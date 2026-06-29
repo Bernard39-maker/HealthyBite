@@ -50,7 +50,7 @@ type Meal = {
 type Category = { strCategory: string };
 type Area = { strArea: string };
 
-// ─── Price by category ────────────────────────────────────────────────────────
+// ─── Price by category ───
 const PRICE_MAP: Record<string, number> = {
   Seafood: 14.99, Beef: 13.99, Chicken: 12.99, Lamb: 15.99,
   Pork: 12.49, Pasta: 11.99, Vegetarian: 10.99, Vegan: 10.49,
@@ -59,7 +59,7 @@ const PRICE_MAP: Record<string, number> = {
 };
 const getPrice = (category: string) => PRICE_MAP[category] ?? 11.99;
 
-// ─── Shuffle helper ───────────────────────────────────────────────────────────
+// ─── Shuffle helper ─────
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
@@ -124,7 +124,7 @@ function MealDetailModal({
   );
 }
 
-// ─── Meal card ────────────────────────────────────────────────────────────────
+// ─── Meal card ───────
 function MealCard({ meal, onClick, onAddToCart }: { meal: Meal; onClick: () => void; onAddToCart: () => void }) {
   const { addItem } = useCart();
   const toast = useToast();
