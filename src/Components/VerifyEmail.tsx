@@ -3,21 +3,26 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Button, Flex, Icon, Text, VStack, Spinner } from "@chakra-ui/react";
 import { FaCheckCircle, FaTimesCircle, FaLeaf } from "react-icons/fa";
 
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function VerifyEmail() {
   const [params] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const navigate = useNavigate();
   const token = params.get("token");
+useEffect(() => {
+  if (!token) {
+    setStatus("error");
+    return;
+  }
 
-  useEffect(() => {
-    if (!token) { setStatus("error"); return; }
-    fetch(`http://localhost:5000/api/auth/verify-email?token=${token}`)
-      .then((res) => {
-        if (res.ok || res.redirected) setStatus("success");
-        else setStatus("error");
-      })
-      .catch(() => setStatus("error"));
-  }, [token]);
+  fetch(`${apiBase}/api/auth/verify-email?token=${token}`)
+    .then((res) => {
+      if (res.ok || res.redirected) setStatus("success");
+      else setStatus("error");
+    })
+    .catch(() => setStatus("error"));
+}, [token]);
 
   return (
     <Flex minH="100vh" bg="#fbfaf7" align="center" justify="center" px={6}>

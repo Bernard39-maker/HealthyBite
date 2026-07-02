@@ -37,7 +37,7 @@ import {
   FaHome,
 } from "react-icons/fa";
 
-const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const API = `${apiBase}/api/profile`;
 
@@ -46,7 +46,7 @@ const authHeader = () => ({
   "Content-Type": "application/json",
 });
 
-// ─── Password input ───────────────────────────────────────────────────────────
+// ─── Password input ─────
 function PasswordInput({ placeholder, value, onChange }: { placeholder: string; value: string; onChange: (v: string) => void }) {
   const [show, setShow] = useState(false);
   return (

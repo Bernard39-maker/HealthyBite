@@ -100,7 +100,7 @@ import {
     topMeals?: Array<{ _id?: string; name?: string; count?: number }>;
   };
 
-const API = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const ADMIN_API = `${API}/api/admin`;
 
 const getToken = () => localStorage.getItem("token") || "";

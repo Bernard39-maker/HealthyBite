@@ -18,6 +18,8 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaLeaf, FaLock, FaCheckCircle } from "react-icons/fa";
 
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function PasswordInput({
   placeholder = "Enter new password",
   value,
@@ -97,11 +99,11 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
+      const res = await fetch(`${apiBase}/api/auth/reset`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ token, password }),
+});
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setSuccess(true);

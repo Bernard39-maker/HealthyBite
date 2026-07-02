@@ -118,12 +118,14 @@ export default function HomePage() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/meals")
-      .then((res) => res.json())
-      .then((data: Meal[]) => {
-        setPopularMeals(data.filter((m) => m.category === "popular"));
-        setExtraMeals(data.filter((m) => m.category === "extra"));
-      })
+   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+fetch(`${apiBase}/api/meals`)
+  .then((res) => res.json())
+  .then((data: Meal[]) => {
+    setPopularMeals(data.filter((m) => m.category === "popular"));
+    setExtraMeals(data.filter((m) => m.category === "extra"));
+  })
       .catch((err) => console.error(err))
       .finally(() => setMealsLoading(false));
   }, []);

@@ -63,7 +63,7 @@ function CheckoutModal({
     });
 
   // Add api base url from env
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const handleOrder = async () => {
     if (!form.name || !form.email || !form.phone || !form.address) {
