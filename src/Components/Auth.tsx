@@ -93,7 +93,7 @@ function LoginForm() {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -117,7 +117,7 @@ function LoginForm() {
     }
     setForgotLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/forgot", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -179,7 +179,7 @@ function LoginForm() {
         <Button w="full" variant="outline" borderColor="gray.200" color="gray.700" size="lg" rounded="md"
           fontWeight="medium" leftIcon={<Icon as={FcGoogle} boxSize={5} />}
           _hover={{ bg: "gray.50", borderColor: "gray.300" }} transition="all 0.2s"
-          onClick={() => window.location.href = "http://localhost:5000/api/auth/google"}>
+          onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`}>
           Continue with Google
         </Button>
       </VStack>
@@ -261,7 +261,7 @@ function SignUpForm() {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -319,7 +319,7 @@ function SignUpForm() {
       <Button w="full" variant="outline" borderColor="gray.200" color="gray.700" size="lg" rounded="md"
         fontWeight="medium" leftIcon={<Icon as={FcGoogle} boxSize={5} />}
         _hover={{ bg: "gray.50", borderColor: "gray.300" }} transition="all 0.2s"
-        onClick={() => window.location.href = "http://localhost:5000/api/auth/google"}>
+        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`}>
         Continue with Google
       </Button>
     </VStack>

@@ -37,7 +37,10 @@ import {
   FaHome,
 } from "react-icons/fa";
 
-const API = "http://localhost:5000/api/profile";
+const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
+const API = `${apiBase}/api/profile`;
+
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
   "Content-Type": "application/json",

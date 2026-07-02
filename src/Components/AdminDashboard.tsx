@@ -102,13 +102,15 @@ import {
 
 const API = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 const ADMIN_API = `${API}/api/admin`;
+
 const getToken = () => localStorage.getItem("token") || "";
+
 const authHeader = () => ({
   Authorization: `Bearer ${getToken()}`,
   "Content-Type": "application/json",
 });
 
-// ─── Tokens ──────────────────────────────────────────────────────────────────
+// ─── Tokens ────────
 const C = {
   forest:   "#1a2e0a",
   green:    "#6b8f3f",
