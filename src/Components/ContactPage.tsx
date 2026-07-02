@@ -30,6 +30,8 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 // ─── Wave ─────────────────────────────────────────────────────────────────────
 type WaveProps = { d: string; fill: string; position?: "bottom" | "top"; height?: string | number };
 function Wave({ d, fill, position = "bottom", height = "120px" }: WaveProps) {
