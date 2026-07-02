@@ -244,6 +244,7 @@ function SignUpForm() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const navigate = useNavigate();
 
   const handleSignUp = async () => {
     if (!name || !email || !password || !confirm) {
@@ -268,16 +269,9 @@ function SignUpForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      // ✅ Don't save token or navigate — email must be verified first
-      toast({
-        title: "Account created! 🎉",
-        description: "Please check your email to verify your account before logging in.",
-        status: "success",
-        duration: 8000,
-        isClosable: true,
-      });
-      // Clear form
-      setName(""); setEmail(""); setPassword(""); setConfirm("");
+      localStorage.setItem("token", data.token);
+      toast({ title: "Account created! Welcome aboard 🎉", status: "success", duration: 3000, isClosable: true });
+      navigate("/");
     } catch (err: any) {
       toast({ title: err.message, status: "error", duration: 3000, isClosable: true });
     } finally {
@@ -414,7 +408,7 @@ export default function AuthPage() {
 
       {/* ── Right form panel ── */}
       <Flex flex={{ base: 1, lg: "0 0 480px" }} direction="column" align="center" justify="center"
-        px={{ base: 6, md: 12 }} py={12} bg="white">
+        px={{ base: 6, md: 12 }} py={12} bg="white" position="relative" zIndex={1}>
 
         <Flex display={{ base: "flex", lg: "none" }} align="center" gap={2} mb={8} cursor="pointer" onClick={() => navigate("/")}>
           <Icon as={FaLeaf} color="#6b8f3f" boxSize={6} />

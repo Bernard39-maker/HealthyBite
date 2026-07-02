@@ -15,6 +15,13 @@ import {
   VStack,
   Collapse,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +42,7 @@ type Meal = {
 };
 
 // ─── Meal Card ──────
-function MealCard({title, content, price, img, onAdd }: { _id: string; title: string; content: string; price: number; img: string; onAdd: () => void }) {
+function MealCard({title, content, price, img, onAdd, onView }: { _id: string; title: string; content: string; price: number; img: string; onAdd: () => void; onView: () => void }) {
   return (
     <Box
       bg="white"
@@ -45,7 +52,7 @@ function MealCard({title, content, price, img, onAdd }: { _id: string; title: st
       transition="transform 0.2s, shadow 0.2s"
       _hover={{ transform: "translateY(-4px)", shadow: "lg" }}
     >
-      <Image src={img} alt={title} rounded="xl" w="100%" h="200px" objectFit="cover" mb={3} />
+      <Image src={img} alt={title} rounded="xl" w="100%" h="200px" objectFit="cover" mb={3} cursor="pointer" onClick={onView} />
       <Heading size="sm" textAlign="center" mb={2}>{title}</Heading>
       <Text color="gray.500" fontSize="sm" mb={3} noOfLines={2}>{content}</Text>
       <HStack justify="space-between" align="center">
@@ -58,7 +65,7 @@ function MealCard({title, content, price, img, onAdd }: { _id: string; title: st
   );
 }
 
-// ─── Wave ─────────────────────────────────────────────────────────────────────
+// ─── Wave ─────
 type WaveProps = { d: string; fill: string; position?: "bottom" | "top"; height?: string | number };
 function Wave({ d, fill, position = "bottom", height = "120px" }: WaveProps) {
   const isBottom = position === "bottom";
@@ -100,6 +107,7 @@ function FeatureCard({ icon, title, text }: { icon: React.ReactNode; title: stri
 export default function HomePage() {
   const { isOpen, onToggle } = useDisclosure();
   const { isOpen: cartOpen, onOpen: openCart, onClose: closeCart } = useDisclosure();
+  const { isOpen: detailOpen, onOpen: openDetail, onClose: closeDetail } = useDisclosure();
   const navigate = useNavigate();
   const { addItem, count } = useCart();
   const isLoggedIn = !!localStorage.getItem("token");
@@ -107,6 +115,7 @@ export default function HomePage() {
   const [popularMeals, setPopularMeals] = useState<Meal[]>([]);
   const [extraMeals, setExtraMeals] = useState<Meal[]>([]);
   const [mealsLoading, setMealsLoading] = useState(true);
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/meals")
@@ -320,7 +329,14 @@ export default function HomePage() {
               <>
                 <SimpleGrid columns={{ base: 1, md: 4 }} spacing={8} w="100%">
                   {popularMeals.length > 0 ? (
-                    popularMeals.map((meal) => <MealCard key={meal._id} {...meal} onAdd={() => { addItem({ _id: meal._id, title: meal.title, price: meal.price, img: meal.img }); openCart(); }} />)
+                    popularMeals.map((meal) => (
+                      <MealCard
+                        key={meal._id}
+                        {...meal}
+                        onAdd={() => { addItem({ _id: meal._id, title: meal.title, price: meal.price, img: meal.img }); openCart(); }}
+                        onView={() => { setSelectedMeal(meal); openDetail(); }}
+                      />
+                    ))
                   ) : (
                     <Text color="gray.400" fontSize="sm">No popular meals yet.</Text>
                   )}
@@ -328,7 +344,14 @@ export default function HomePage() {
 
                 <Collapse in={isOpen} animateOpacity style={{ width: "100%" }}>
                   <SimpleGrid columns={{ base: 1, md: 4 }} spacing={8} mt={8}>
-                    {extraMeals.map((meal) => <MealCard key={meal._id} {...meal} onAdd={() => { addItem({ _id: meal._id, title: meal.title, price: meal.price, img: meal.img }); openCart(); }} />)}
+                    {extraMeals.map((meal) => (
+                      <MealCard
+                        key={meal._id}
+                        {...meal}
+                        onAdd={() => { addItem({ _id: meal._id, title: meal.title, price: meal.price, img: meal.img }); openCart(); }}
+                        onView={() => { setSelectedMeal(meal); openDetail(); }}
+                      />
+                    ))}
                   </SimpleGrid>
                 </Collapse>
 
@@ -387,6 +410,30 @@ export default function HomePage() {
 
 
       <Footer />
+
+      {/* Meal detail modal */}
+      <Modal isOpen={detailOpen} onClose={closeDetail} isCentered size="lg">
+        <ModalOverlay bg="blackAlpha.600" />
+        <ModalContent rounded="lg" overflow="hidden">
+          <ModalHeader>{selectedMeal?.title}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedMeal && (
+              <VStack spacing={4} align="stretch">
+                <Image src={selectedMeal.img} alt={selectedMeal.title} w="100%" h={{ base: "200px", md: "360px" }} objectFit="cover" rounded="md" />
+                <Text color="gray.600">{selectedMeal.content}</Text>
+                <HStack justify="space-between">
+                  <Text fontWeight="bold" color="#6b8f3f" fontSize="xl">${selectedMeal.price}</Text>
+                  <Button bg="#6b8f3f" color="white" onClick={() => { addItem({ _id: selectedMeal._id, title: selectedMeal.title, price: selectedMeal.price, img: selectedMeal.img }); openCart(); closeDetail(); }}>Add to Cart</Button>
+                </HStack>
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={closeDetail}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* ── Floating cart button ── */}
       <Box position="fixed" bottom={6} right={6} zIndex={300}>

@@ -35,7 +35,7 @@ import CartDrawer from "./CartDrawer";
 import Header from "./shared/header";
 import Footer from "./shared/footer";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───
 type Meal = {
   idMeal: string;
   strMeal: string;
@@ -186,7 +186,7 @@ function MealCard({ meal, onClick, onAddToCart }: { meal: Meal; onClick: () => v
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// ─── Skeleton ───────
 function MealSkeleton() {
   return (
     <Box bg="white" rounded="2xl" shadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
@@ -200,7 +200,7 @@ function MealSkeleton() {
   );
 }
 
-// ─── Menu Page ────────────────────────────────────────────────────────────────
+// ─── Menu Page ──────
 export default function MenuPage() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
